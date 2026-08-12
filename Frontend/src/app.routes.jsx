@@ -1,44 +1,52 @@
 import { createBrowserRouter } from "react-router";
-import Login from "./features/auth/pages/Login";
-import Register from "./features/auth/pages/Register";
+import { lazy, Suspense } from "react";
 import Protected from "./features/auth/components/Protected";
-import Home from "./features/interview/pages/Home";
-import Interview from "./features/interview/pages/interview";
-import Reports from "./features/interview/pages/Reports";  
-import Progress from "./features/interview/pages/Progress";
-import ForgotPassword from "./features/auth/pages/ForgotPassword";
+
+const Login = lazy(() => import("./features/auth/pages/Login"));
+const Register = lazy(() => import("./features/auth/pages/Register"));
+const Home = lazy(() => import("./features/interview/pages/Home"));
+const Interview = lazy(() => import("./features/interview/pages/interview"));
+const Reports = lazy(() => import("./features/interview/pages/Reports"));
+const Progress = lazy(() => import("./features/interview/pages/Progress"));
+const ForgotPassword = lazy(() => import("./features/auth/pages/ForgotPassword"));
+
+const withSuspense = (element) => (
+    <Suspense fallback={<div>Loading...</div>}>
+        {element}
+    </Suspense>
+);
 
 export const router = createBrowserRouter([
     {
         path: "/login",
-        element: <Login/>
+        element: withSuspense(<Login/>)
     },
     {
         path: "/register",
-        element: <Register/>
+        element: withSuspense(<Register/>)
     },
     {
         path: "/",
-        element: <Protected><Home /></Protected>
+        element: withSuspense(<Protected><Home /></Protected>)
     },
     {
         path: "/home",
-        element: <Protected><Home /></Protected>
+        element: withSuspense(<Protected><Home /></Protected>)
     },
     {
         path: "/interview/:interviewId",
-        element: <Protected><Interview /></Protected>
+        element: withSuspense(<Protected><Interview /></Protected>)
     },
     {
         path: "/reports",
-        element: <Protected><Reports /></Protected>
+        element: withSuspense(<Protected><Reports /></Protected>)
     },
     {
         path: "/progress",
-        element: <Protected><Progress /></Protected>
+        element: withSuspense(<Protected><Progress /></Protected>)
     },
     {
         path: "/forgot-password",
-        element: <ForgotPassword/>
+        element: withSuspense(<ForgotPassword/>)
     }
 ])
