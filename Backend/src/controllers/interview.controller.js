@@ -73,6 +73,13 @@ async function generateInterViewReportController(req, res) {
             })
         }
 
+        // Friendlier message when Gemini's servers are temporarily overloaded
+        if (err.status === 503 || err.message?.includes("UNAVAILABLE")) {
+            return res.status(503).json({
+                message: "Our AI service is experiencing high demand right now. Please try again in a moment."
+            })
+        }
+
         res.status(500).json({
             message: "Something went wrong while generating your interview report. Please try again."
         })
@@ -150,6 +157,12 @@ async function generateResumePdfController(req, res) {
             })
         }
 
+        if (err.status === 503 || err.message?.includes("UNAVAILABLE")) {
+            return res.status(503).json({
+                message: "Our AI service is experiencing high demand right now. Please try again in a moment."
+            })
+        }
+
         res.status(500).json({
             message: "Something went wrong while generating the resume PDF. Please try again."
         })
@@ -157,3 +170,4 @@ async function generateResumePdfController(req, res) {
 }
 
 module.exports = { generateInterViewReportController, getInterviewReportByIdController, getAllInterviewReportsController, generateResumePdfController }
+
