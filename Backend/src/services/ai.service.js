@@ -150,6 +150,15 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
                         you can highlight the content using some colors or different font styles but the overall design should be simple and professional.
                         The content should be ATS friendly, i.e. it should be easily parsable by ATS systems without losing important information.
                         The resume should not be so lengthy, it should ideally be 1-2 pages long when converted to PDF. Focus on quality rather than quantity and make sure to include all the relevant information that can increase the candidate's chances of getting an interview call for the given job description.
+
+                        CRITICAL — FACTUAL ACCURACY RULES (do not violate these):
+                        - Only use facts, projects, employers, dates, metrics, and achievements that are explicitly present in the Resume or Self Description above. Do not invent or assume anything not stated.
+                        - Do NOT fabricate specific numbers, percentages, or metrics (e.g. "reduced latency by 30%", "wrote 45 test cases") unless that exact figure appears in the input. If the input only vaguely mentions an improvement without a number, describe it qualitatively instead of inventing a number.
+                        - Do NOT invent dates (internship start/end dates, employment duration) if none are given in the input. Omit the date or use a vague placeholder like "Recent" only if absolutely necessary — never fabricate a specific month/year.
+                        - Do NOT invent additional projects, companies, institutions, certifications, or achievements beyond what is explicitly mentioned in the input.
+                        - Do NOT invent a CGPA, GPA, or percentage score if none is provided in the input.
+                        - You MAY rephrase, reorganize, and professionally polish what is actually stated — that is expected and encouraged. You MAY select which real, stated facts to emphasize based on the job description. You must NOT add new factual claims that are not traceable back to the input.
+                        - If the input is thin in a section (e.g. few projects, no metrics), keep that section shorter and more general rather than filling the gap with invented specifics. A shorter, honest resume is strongly preferred over a longer, fabricated one.
                     `
 
     const response = await ai.models.generateContent({
@@ -170,4 +179,3 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
 }
 
 module.exports = { generateInterviewReport, generateResumePdf }
-
