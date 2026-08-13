@@ -4,21 +4,25 @@ An AI-powered interview preparation platform. Upload your resume, paste a job de
 
 Built as a full-stack MERN application with Google's Gemini API for AI generation.
 
+**Live Demo:** [interview-ai-brown-ten.vercel.app](https://interview-ai-brown-ten.vercel.app)
+*(Backend runs on Render's free tier — the first request after inactivity may take 30–60s to wake up.)*
+
 ---
 
 ## Features
 
-- **Authentication** — register, login, logout, and a full forgot-password flow (identity verification + reset), with session persistence via JWT cookies
+- **Authentication** — register, login, logout, and a full forgot-password flow (identity verification + reset), with password visibility toggles and session persistence via JWT cookies
 - **AI Interview Report Generation** — upload a resume (PDF) and paste a job description; the AI analyzes both and returns:
   - A match score (0–100)
   - Technical interview questions with intention and model answers
   - Behavioral interview questions with intention and model answers
   - Identified skill gaps with severity (low / medium / high)
   - A day-by-day preparation roadmap
-- **Tailored Resume Download** — generates a resume PDF rewritten specifically for the target job description (not just reformatted — the AI decides what to emphasize)
+- **Tailored Resume Download** — generates a resume PDF rewritten specifically for the target job description (not just reformatted — the AI decides what to emphasize), with explicit prompt guardrails against fabricating dates, metrics, or achievements not present in the original input
 - **Report History** — view every report you've generated, with match score and date
 - **Progress Dashboard** — aggregate stats (average match score, best match, total reports), a match-score-over-time chart, and your most common recurring skill gaps across all reports
-- **Robust error handling** — corrupted PDFs, unreadable/scanned PDFs, missing fields, and AI rate limits all fail gracefully with clear user-facing messages instead of crashes
+- **Robust error handling** — corrupted PDFs, unreadable/scanned PDFs, missing fields, AI rate limits, and AI service overload all fail gracefully with clear user-facing messages instead of crashes
+- **Fully responsive** — tested and fixed across desktop, tablet, and narrow mobile viewports (down to 360px)
 
 ## Tech Stack
 
@@ -39,6 +43,11 @@ Built as a full-stack MERN application with Google's Gemini API for AI generatio
 - pdf-parse (resume text extraction)
 - Puppeteer (HTML → PDF rendering for tailored resumes)
 - Google Gemini API (`@google/genai`) with structured JSON output
+
+**Infrastructure**
+- MongoDB Atlas (database)
+- Render (backend hosting)
+- Vercel (frontend hosting)
 
 ## Architecture
 
@@ -66,7 +75,6 @@ features/
 - Node.js 18+
 - MongoDB (local or Atlas)
 - A Google Gemini API key ([aistudio.google.com](https://aistudio.google.com))
-- A Gmail account (only if using OTP-based password reset instead of the identity-verification flow)
 
 ### Backend
 
@@ -93,6 +101,15 @@ npm run dev
 ```bash
 cd Frontend
 npm install
+```
+
+Create a `.env` file:
+
+```
+VITE_API_URL=http://localhost:3000
+```
+
+```bash
 npm run dev
 ```
 
@@ -117,14 +134,18 @@ The app runs at `http://localhost:5173`, backend at `http://localhost:3000`.
 
 - **Structured AI output** — early versions relied on prompt instructions alone to get JSON back from Gemini, which was unreliable (the model would return differently-shaped JSON, or wrap it in an array). Switched to defining the schema directly in Gemini's native `responseSchema` format (via `Type.OBJECT` / `Type.ARRAY`) instead of converting from a Zod schema, which fully eliminated shape mismatches.
 - **PDF extraction guards** — resumes fail to parse for several real reasons (corrupted files, scanned images, custom-embedded fonts from design templates). The backend distinguishes between a parse exception (invalid file) and empty/insufficient extracted text (unreadable content), returning a specific, honest message for each rather than silently generating a report from empty input.
-- **Rate limit handling** — Gemini's free-tier quota errors are caught specifically and surfaced as a friendly "try again shortly" message rather than a generic 500.
+- **AI resume generation is fact-constrained by prompt design** — the tailored resume feature could easily fabricate metrics, dates, or achievements to make a candidate look better. The prompt explicitly forbids inventing any fact, number, or date not present in the original resume/self-description, favoring a shorter, honest resume over a longer, fabricated one.
+- **Rate limit and overload handling** — Gemini's free-tier quota errors (429) and temporary server overload errors (503) are caught specifically and surfaced as friendly, distinct messages rather than a generic 500.
 - **Tested against adversarial inputs** — the AI pipeline was validated against genuinely mismatched inputs (e.g. a personal trainer's resume against a software engineering job, or a resume/self-description/job description describing three different people) to observe and document how the model behaves under contradiction, not just on clean happy-path data.
+- **Cross-domain auth in production** — since the deployed frontend (Vercel) and backend (Render) live on different domains, auth cookies use `secure: true` and `sameSite: "none"` in production while falling back to relaxed settings in local development, controlled by `NODE_ENV`.
+- **PDF rendering on constrained hosting** — Puppeteer's Chromium binary doesn't reliably persist on Render's default build/runtime split; resolved via an explicit Chrome install step in the build command and a pinned `PUPPETEER_CACHE_DIR`.
 
 ## Known Limitations
 
 - Password reset (non-OTP version) verifies identity by matching email + username rather than proving email ownership via a token/link — a known simplification, not a production-grade flow.
 - No OCR fallback for scanned or image-based PDFs; these are currently rejected with a clear message rather than processed.
 - The AI does not flag internal inconsistencies between resume, self-description, and job description — it will generate a plausible report even from contradictory inputs.
+- Backend is on Render's free tier, which spins down after inactivity — the first request after idle time may take 30–60 seconds.
 
 ## License
 
